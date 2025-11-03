@@ -1,186 +1,237 @@
-<!-- index.html with 3-point line, key, and free throw area --><!DOCTYPE html><html lang="en">
+<!-- index.html — NBA-accurate proportions (94x50 ft) with 3-point arc, key, free throw circle, rim/backboard. Half-court toggle shows one end. --><!DOCTYPE html><html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Basketball Court — Draggable Tokens</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>NBA Court — Draggable Tokens</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 20px;
-      background: #fafafa;
-    }
-    h1 {
-      text-align: center;
-      font-size: 24px;
-      font-weight: bold;
-    }
-    .court-container {
-      position: relative;
-      width: 90%;
-      max-width: 900px;
-      margin: 20px auto;
-      background: #f6e7bf;
-      border: 5px solid #b57b2a;
-      border-radius: 10px;
-      aspect-ratio: 94 / 50;
-      overflow: hidden;
-      touch-action: none;
-    }
-    svg {
-      width: 100%;
-      height: 100%;
-    }
-    .token {
-      position: absolute;
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-weight: bold;
-      cursor: grab;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-    }
-    .controls {
-      text-align: center;
-      margin-top: 10px;
-    }
-    button {
-      margin: 0 5px;
-      padding: 8px 14px;
-      border: 1px solid #aaa;
-      border-radius: 6px;
-      background: white;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #f0f0f0;
-    }
-    pre {
-      width: 90%;
-      margin: 10px auto;
-      background: #eee;
-      padding: 10px;
-      border-radius: 8px;
-      overflow: auto;
-      font-size: 12px;
-    }
+    :root { --court-fill: #f6e7bf; --line: #1f1f1f; }
+    body { font-family: Inter, Arial, sans-serif; margin: 0; padding: 18px; background:#fafafa; }
+    h1 { text-align:center; font-size:20px; margin:0 0 12px; }
+    .controls { text-align:center; margin-bottom:12px; }
+    button { margin:0 6px; padding:8px 12px; border-radius:8px; border:1px solid #bbb; background:#fff; cursor:pointer; }
+    .court-container { width: 94vw; max-width:980px; margin: 0 auto; border-radius:10px; border:6px solid #b57b2a; background: var(--court-fill); overflow:hidden; touch-action:none; }
+    /* Keep aspect ratio 94:50 (NBA) */
+    .court-inner { width:100%; height:0; padding-bottom:53.19%; position:relative; }
+    svg { position:absolute; inset:0; width:100%; height:100%; display:block; }.token { position:absolute; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; box-shadow:0 6px 18px rgba(0,0,0,0.18); cursor:grab; user-select:none; }
+pre { width: 94vw; max-width:980px; margin:12px auto 0; background:#efefef; padding:10px; border-radius:8px; font-size:12px; }
+
   </style>
 </head>
 <body>
-  <h1>Basketball Court — Draggable Tokens</h1>
+  <h1>NBA Court (94'×50') — Draggable Tokens</h1>
   <div class="controls">
-    <button id="toggle">Toggle Court (Full → Half)</button>
-    <button id="reset">Reset</button>
+    <button id="toggle">Toggle: Full Court → Half Court</button>
+    <button id="reset">Reset Positions</button>
     <button id="copy">Copy Positions</button>
-  </div>
-  <div class="court-container" id="court">
-    <svg id="courtSVG" viewBox="0 0 940 500" preserveAspectRatio="xMidYMid meet">
-      <!-- Court outline -->
-      <rect x="0" y="0" width="940" height="500" rx="10" fill="#f6e7bf" stroke="#b57b2a" stroke-width="6" />
-      <!-- Center line and circle -->
-      <line x1="470" y1="0" x2="470" y2="500" stroke="#b57b2a" stroke-width="4" />
-      <circle cx="470" cy="250" r="60" fill="none" stroke="#b57b2a" stroke-width="4" /><!-- Left key, free throw, 3-point -->
-  <g transform="translate(70,110)">
-    <!-- Key area -->
-    <rect x="0" y="0" width="190" height="280" fill="none" stroke="#b57b2a" stroke-width="4" />
-    <!-- Free throw circle -->
-    <circle cx="95" cy="140" r="60" fill="none" stroke="#b57b2a" stroke-width="4" stroke-dasharray="6 6" />
-    <!-- Rim -->
-    <circle cx="-10" cy="140" r="6" fill="#b57b2a" />
-    <!-- 3-point arc -->
-    <path d="M0 50 A240 240 0 0 1 0 330" fill="none" stroke="#b57b2a" stroke-width="4" />
-  </g>
+  </div>  <div class="court-container" id="court">
+    <div class="court-inner" id="courtInner">
+      <!-- viewBox uses units in feet × 10 (so 94ft -> 940 units, 50ft -> 500 units) -->
+      <svg id="courtSVG" viewBox="0 0 940 500" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <!-- background -->
+        <rect x="0" y="0" width="940" height="500" fill="var(--court-fill)" /><!-- outer border line -->
+    <rect x="6" y="6" width="928" height="488" rx="6" fill="none" stroke="#b57b2a" stroke-width="6" />
 
-  <!-- Right key, free throw, 3-point -->
-  <g transform="translate(680,110)">
-    <rect x="0" y="0" width="190" height="280" fill="none" stroke="#b57b2a" stroke-width="4" />
-    <circle cx="95" cy="140" r="60" fill="none" stroke="#b57b2a" stroke-width="4" stroke-dasharray="6 6" />
-    <circle cx="200" cy="140" r="6" fill="#b57b2a" />
-    <path d="M190 50 A240 240 0 0 0 190 330" fill="none" stroke="#b57b2a" stroke-width="4" />
-  </g>
-</svg>
+    <!-- midcourt line and circle -->
+    <line id="midLine" x1="470" y1="0" x2="470" y2="500" stroke="var(--line)" stroke-width="6" />
+    <circle id="midCircle" cx="470" cy="250" r="60" fill="none" stroke="var(--line)" stroke-width="5" />
 
-  </div>
-  <pre id="positions"></pre>  <script>
-    const court = document.getElementById('court');
+    <!-- LEFT END (basket at x = 40 (4ft)) -->
+    <!-- rim center -->
+    <g id="leftEnd">
+      <!-- backboard (3.5 ft wide centered on rim) drawn as short line  -- adjust to look correct top-down -->
+      <line x1="44" y1="235" x2="44" y2="265" stroke="var(--line)" stroke-width="6" stroke-linecap="round" />
+      <!-- rim -->
+      <circle cx="40" cy="250" r="6" fill="var(--line)" />
+
+      <!-- the paint (key) 16ft wide (y direction) and extends 19ft from baseline (x direction) -->
+      <rect x="0" y="170" width="190" height="160" fill="none" stroke="var(--line)" stroke-width="6" />
+
+      <!-- free-throw circle (radius 6ft) centered at 19ft from baseline (x=190) -->
+      <circle cx="190" cy="250" r="60" fill="none" stroke="var(--line)" stroke-width="5" stroke-dasharray="6 6" />
+
+      <!-- small semicircle inside key (under rim, 6ft radius, solid inside) -->
+      <path d="M0 0" fill="none" stroke="var(--line)" stroke-width="5" />
+
+      <!-- 3-point arc centered at rim, radius 23.75ft (237.5) -->
+      <path id="left3pt" d="" fill="none" stroke="var(--line)" stroke-width="5" />
+
+      <!-- corner 3pt lines (22ft from rim -> straight lines from baseline up to where arc begins) -->
+      <line id="leftCornerTop" x1="0" y1="88" x2="90" y2="88" stroke="var(--line)" stroke-width="5" />
+      <line id="leftCornerBottom" x1="0" y1="412" x2="90" y2="412" stroke="var(--line)" stroke-width="5" />
+    </g>
+
+    <!-- RIGHT END (mirror of left) -->
+    <g id="rightEnd">
+      <line x1="896" y1="235" x2="896" y2="265" stroke="var(--line)" stroke-width="6" stroke-linecap="round" />
+      <circle cx="900" cy="250" r="6" fill="var(--line)" />
+
+      <rect x="750" y="170" width="190" height="160" fill="none" stroke="var(--line)" stroke-width="6" />
+
+      <circle cx="750" cy="250" r="60" fill="none" stroke="var(--line)" stroke-width="5" stroke-dasharray="6 6" />
+
+      <path id="right3pt" d="" fill="none" stroke="var(--line)" stroke-width="5" />
+
+      <line id="rightCornerTop" x1="940" y1="88" x2="850" y2="88" stroke="var(--line)" stroke-width="5" />
+      <line id="rightCornerBottom" x1="940" y1="412" x2="850" y2="412" stroke="var(--line)" stroke-width="5" />
+    </g>
+
+  </svg>
+
+  <!-- Draggable tokens are HTML elements absolutely positioned onto the court inner container -->
+</div>
+
+  </div>  <pre id="positions"></pre>  <script>
+    // Court geometry constants (units: feet -> multiplied by 10 to match SVG units)
+    const SCALE = 10; // 10 units = 1 ft
+    const COURT_LENGTH_FT = 94;
+    const COURT_WIDTH_FT = 50;
+
+    // Basket / rim distances
+    const BACKBOARD_FROM_BASELINE_FT = 4; // plane of backboard
+    const RIM_FROM_BASELINE_FT = 4; // center of rim from baseline along length
+    const FREE_THROW_LINE_FROM_BACKBOARD_FT = 15; // distance from backboard to free throw line
+    const FREE_THROW_LINE_FROM_BASELINE_FT = BACKBOARD_FROM_BASELINE_FT + FREE_THROW_LINE_FROM_BACKBOARD_FT; // 19ft
+    const FREE_THROW_CIRCLE_RADIUS_FT = 6;
+    const LANE_WIDTH_FT = 16; // NBA
+    const THREE_PT_RADIUS_FT = 23.75; // 23'9"
+    const THREE_PT_CORNER_DIST_FT = 22; // corner distance
+
+    const svg = document.getElementById('courtSVG');
+
+    // compute and set 3-pt arc paths for left and right ends
+    function describe3ptArc(cx, cy, radiusFt) {
+      const r = radiusFt * SCALE;
+      // compute intersection angles so arc stays within court sidelines
+      // we'll draw an arc from angle start to angle end that lies inside the court width.
+      // solve for angle where y = 0 and y = 500 (court edges)
+      const courtTop = 0;
+      const courtBottom = 500;
+
+      // angle where circle intersects top: thetaTop = atan2(courtTop-cy, x - cx) ; find x where circle y=courtTop -> x = cx ± sqrt(r^2 - (courtTop-cy)^2)
+      const dyTop = courtTop - cy;
+      let thetaTop = -Math.acos(Math.max(-1, Math.min(1, Math.abs(dyTop) / r)));
+      // angle where circle intersects bottom
+      const dyBottom = courtBottom - cy;
+      let thetaBottom = Math.acos(Math.max(-1, Math.min(1, Math.abs(dyBottom) / r)));
+
+      // but we want angles measured from center to points inside court relative to positive X axis
+      // simpler: draw arc from -80deg to +80deg if radius large enough
+      const start = -80 * Math.PI / 180;
+      const end = 80 * Math.PI / 180;
+
+      const startX = cx + r * Math.cos(start);
+      const startY = cy + r * Math.sin(start);
+      const endX = cx + r * Math.cos(end);
+      const endY = cy + r * Math.sin(end);
+
+      const largeArc = (end - start) % (2 * Math.PI) > Math.PI ? 1 : 0;
+      // Use sweep flag 1 to draw arc from start->end clockwise
+      return `M ${startX.toFixed(2)} ${startY.toFixed(2)} A ${r.toFixed(2)} ${r.toFixed(2)} 0 ${largeArc} 1 ${endX.toFixed(2)} ${endY.toFixed(2)}`;
+    }
+
+    function refresh3pt() {
+      // left rim center at x = RIM_FROM_BASELINE_FT * SCALE
+      const leftCx = RIM_FROM_BASELINE_FT * SCALE;
+      const rightCx = (COURT_LENGTH_FT - RIM_FROM_BASELINE_FT) * SCALE;
+      const cy = (COURT_WIDTH_FT / 2) * SCALE; // 250
+      const leftPath = describe3ptArc(leftCx, cy, THREE_PT_RADIUS_FT);
+      const rightPath = describe3ptArc(rightCx, cy, THREE_PT_RADIUS_FT);
+      document.getElementById('left3pt').setAttribute('d', leftPath);
+      document.getElementById('right3pt').setAttribute('d', rightPath);
+    }
+
+    refresh3pt();
+
+    // --- Tokens logic (HTML elements positioned over the court) ---
+    const courtEl = document.getElementById('court');
+    const courtInner = document.getElementById('courtInner');
     const positionsDisplay = document.getElementById('positions');
-    let mode = 'full';
 
     let players = [
-      { id: 1, label: '1', color: '#ef4444', x: 10, y: 20 },
+      { id: 1, label: '1', color: '#ef4444', x: 12, y: 20 },
       { id: 2, label: '2', color: '#f59e0b', x: 30, y: 20 },
       { id: 3, label: '3', color: '#10b981', x: 50, y: 20 },
       { id: 4, label: '4', color: '#3b82f6', x: 40, y: 50 },
       { id: 5, label: '5', color: '#8b5cf6', x: 60, y: 50 }
     ];
 
-    const createTokens = () => {
-      court.querySelectorAll('.token').forEach(t => t.remove());
+    function createTokens() {
+      // remove prior
+      courtInner.querySelectorAll('.token').forEach(t => t.remove());
       players.forEach(p => {
-        const div = document.createElement('div');
-        div.className = 'token';
-        div.textContent = p.label;
-        div.style.background = p.color;
-        div.style.left = `calc(${p.x}% - 18px)`;
-        div.style.top = `calc(${p.y}% - 18px)`;
-        div.dataset.id = p.id;
-        court.appendChild(div);
+        const d = document.createElement('div');
+        d.className = 'token';
+        d.textContent = p.label;
+        d.style.background = p.color;
+        // position in percent of court length/width
+        d.style.left = `calc(${p.x}% - 18px)`;
+        d.style.top = `calc(${p.y}% - 18px)`;
+        d.dataset.id = p.id;
+        courtInner.appendChild(d);
       });
-      updatePositions();
-    };
-
-    function updatePositions() {
-      positionsDisplay.textContent = JSON.stringify(players, null, 2);
+      updatePositionsDisplay();
     }
 
-    let dragging = null;
+    function updatePositionsDisplay() { positionsDisplay.textContent = JSON.stringify(players, null, 2); }
 
-    court.addEventListener('pointerdown', e => {
-      if (!e.target.classList.contains('token')) return;
-      const id = parseInt(e.target.dataset.id);
-      dragging = id;
-      e.target.setPointerCapture(e.pointerId);
+    createTokens();
+
+    // dragging behavior using pointer events
+    let draggingId = null;
+    let dragOffset = { x:0, y:0 };
+
+    courtInner.addEventListener('pointerdown', (ev) => {
+      const t = ev.target.closest('.token');
+      if (!t) return;
+      draggingId = Number(t.dataset.id);
+      // compute offset between pointer and token center to keep cursor relative position
+      const rect = t.getBoundingClientRect();
+      dragOffset.x = ev.clientX - (rect.left + rect.width/2);
+      dragOffset.y = ev.clientY - (rect.top + rect.height/2);
+      t.setPointerCapture(ev.pointerId);
     });
 
-    court.addEventListener('pointermove', e => {
-      if (!dragging) return;
-      const rect = court.getBoundingClientRect();
-      let x = ((e.clientX - rect.left) / rect.width) * 100;
-      let y = ((e.clientY - rect.top) / rect.height) * 100;
-      x = Math.max(0, Math.min(100, x));
-      y = Math.max(0, Math.min(100, y));
-      players = players.map(p => p.id === dragging ? { ...p, x, y } : p);
-      createTokens();
+    window.addEventListener('pointermove', (ev) => {
+      if (!draggingId) return;
+      const rect = courtInner.getBoundingClientRect();
+      // pointer adjusted for offset
+      const adjX = ev.clientX - dragOffset.x;
+      const adjY = ev.clientY - dragOffset.y;
+      let px = ((adjX - rect.left) / rect.width) * 100;
+      let py = ((adjY - rect.top) / rect.height) * 100;
+      px = Math.max(0, Math.min(100, px));
+      py = Math.max(0, Math.min(100, py));
+      players = players.map(p => p.id === draggingId ? { ...p, x: px, y: py } : p);
+      // move elements without re-creating to reduce jitter
+      const el = courtInner.querySelector(`.token[data-id='${draggingId}']`);
+      if (el) { el.style.left = `calc(${px}% - 18px)`; el.style.top = `calc(${py}% - 18px)`; }
+      updatePositionsDisplay();
     });
 
-    court.addEventListener('pointerup', e => {
-      dragging = null;
-    });
+    window.addEventListener('pointerup', (ev) => { draggingId = null; });
 
+    // Controls
     document.getElementById('toggle').addEventListener('click', () => {
+      const btn = document.getElementById('toggle');
       const svg = document.getElementById('courtSVG');
-      if (mode === 'full') {
-        svg.setAttribute('viewBox', '0 0 470 500');
-        svg.querySelector('line').style.display = 'none';
-        svg.querySelector('circle').style.display = 'none';
-        document.getElementById('toggle').innerText = 'Toggle Court (Half → Full)';
-        mode = 'half';
+      if (svg.getAttribute('viewBox') === '0 0 940 500') {
+        // show half court (left end only) -> set viewBox to show 0..470 x 0..500
+        svg.setAttribute('viewBox','0 0 470 500');
+        // hide midcourt line & center circle
+        document.getElementById('midLine').style.display = 'none';
+        document.getElementById('midCircle').style.display = 'none';
+        btn.textContent = 'Toggle: Half Court → Full Court';
       } else {
-        svg.setAttribute('viewBox', '0 0 940 500');
-        svg.querySelector('line').style.display = '';
-        svg.querySelector('circle').style.display = '';
-        document.getElementById('toggle').innerText = 'Toggle Court (Full → Half)';
-        mode = 'full';
+        svg.setAttribute('viewBox','0 0 940 500');
+        document.getElementById('midLine').style.display = '';
+        document.getElementById('midCircle').style.display = '';
+        btn.textContent = 'Toggle: Full Court → Half Court';
       }
     });
 
     document.getElementById('reset').addEventListener('click', () => {
       players = [
-        { id: 1, label: '1', color: '#ef4444', x: 10, y: 20 },
+        { id: 1, label: '1', color: '#ef4444', x: 12, y: 20 },
         { id: 2, label: '2', color: '#f59e0b', x: 30, y: 20 },
         { id: 3, label: '3', color: '#10b981', x: 50, y: 20 },
         { id: 4, label: '4', color: '#3b82f6', x: 40, y: 50 },
@@ -189,11 +240,18 @@
       createTokens();
     });
 
-    document.getElementById('copy').addEventListener('click', () => {
-      navigator.clipboard.writeText(JSON.stringify(players, null, 2));
-      alert('Positions copied to clipboard!');
+    document.getElementById('copy').addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(JSON.stringify(players, null, 2));
+        alert('Positions copied to clipboard');
+      } catch (e) {
+        alert('Could not copy to clipboard — here are the positions:
+' + JSON.stringify(players, null, 2));
+      }
     });
 
-    createTokens();
+    // Recompute 3pt arcs if window resized (SVG scales but path coords must be recalculated)
+    window.addEventListener('resize', () => refresh3pt());
+
   </script></body>
 </html>
