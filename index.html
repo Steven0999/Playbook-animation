@@ -1,6 +1,4 @@
-<!-- index.html with 3-point line, key, and free throw area -->
-<!DOCTYPE html>
-<html lang="en">
+<!-- index.html with 3-point line, key, and free throw area --><!DOCTYPE html><html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -85,32 +83,29 @@
       <rect x="0" y="0" width="940" height="500" rx="10" fill="#f6e7bf" stroke="#b57b2a" stroke-width="6" />
       <!-- Center line and circle -->
       <line x1="470" y1="0" x2="470" y2="500" stroke="#b57b2a" stroke-width="4" />
-      <circle cx="470" cy="250" r="60" fill="none" stroke="#b57b2a" stroke-width="4" />
+      <circle cx="470" cy="250" r="60" fill="none" stroke="#b57b2a" stroke-width="4" /><!-- Left key, free throw, 3-point -->
+  <g transform="translate(70,110)">
+    <!-- Key area -->
+    <rect x="0" y="0" width="190" height="280" fill="none" stroke="#b57b2a" stroke-width="4" />
+    <!-- Free throw circle -->
+    <circle cx="95" cy="140" r="60" fill="none" stroke="#b57b2a" stroke-width="4" stroke-dasharray="6 6" />
+    <!-- Rim -->
+    <circle cx="-10" cy="140" r="6" fill="#b57b2a" />
+    <!-- 3-point arc -->
+    <path d="M0 50 A240 240 0 0 1 0 330" fill="none" stroke="#b57b2a" stroke-width="4" />
+  </g>
 
-      <!-- Left key, free throw, 3-point -->
-      <g transform="translate(70,110)">
-        <!-- Key area -->
-        <rect x="0" y="0" width="190" height="280" fill="none" stroke="#b57b2a" stroke-width="4" />
-        <!-- Free throw circle -->
-        <circle cx="95" cy="140" r="60" fill="none" stroke="#b57b2a" stroke-width="4" stroke-dasharray="6 6" />
-        <!-- Rim -->
-        <circle cx="-10" cy="140" r="6" fill="#b57b2a" />
-        <!-- 3-point arc -->
-        <path d="M0 50 A240 240 0 0 1 0 330" fill="none" stroke="#b57b2a" stroke-width="4" />
-      </g>
+  <!-- Right key, free throw, 3-point -->
+  <g transform="translate(680,110)">
+    <rect x="0" y="0" width="190" height="280" fill="none" stroke="#b57b2a" stroke-width="4" />
+    <circle cx="95" cy="140" r="60" fill="none" stroke="#b57b2a" stroke-width="4" stroke-dasharray="6 6" />
+    <circle cx="200" cy="140" r="6" fill="#b57b2a" />
+    <path d="M190 50 A240 240 0 0 0 190 330" fill="none" stroke="#b57b2a" stroke-width="4" />
+  </g>
+</svg>
 
-      <!-- Right key, free throw, 3-point -->
-      <g transform="translate(680,110)">
-        <rect x="0" y="0" width="190" height="280" fill="none" stroke="#b57b2a" stroke-width="4" />
-        <circle cx="95" cy="140" r="60" fill="none" stroke="#b57b2a" stroke-width="4" stroke-dasharray="6 6" />
-        <circle cx="200" cy="140" r="6" fill="#b57b2a" />
-        <path d="M190 50 A240 240 0 0 0 190 330" fill="none" stroke="#b57b2a" stroke-width="4" />
-      </g>
-    </svg>
   </div>
-  <pre id="positions"></pre>
-
-  <script>
+  <pre id="positions"></pre>  <script>
     const court = document.getElementById('court');
     const positionsDisplay = document.getElementById('positions');
     let mode = 'full';
@@ -200,6 +195,5 @@
     });
 
     createTokens();
-  </script>
-</body>
+  </script></body>
 </html>
