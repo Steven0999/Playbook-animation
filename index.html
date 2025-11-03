@@ -18,7 +18,7 @@ pre { width: 94vw; max-width:980px; margin:12px auto 0; background:#efefef; padd
   </style>
 </head>
 <body>
-  <h1>NBA Court (94'×50') — Full & Half Court with Draggable Tokens and Ball</h1>
+  <h1>Basketball Playbook</h1>
   <div class="controls">
     <button id="toggle">Toggle: Full Court → Half Court</button>
     <button id="reset">Reset Positions</button>
@@ -47,7 +47,8 @@ pre { width: 94vw; max-width:980px; margin:12px auto 0; background:#efefef; padd
   </svg>
 </div>
 
-  </div>  <pre id="positions"></pre>  <script>
+  </div>  
+  <pre id="positions"></pre>  <script>
     const SCALE = 10;
     const COURT_LENGTH_FT = 94;
     const COURT_WIDTH_FT = 50;
@@ -175,5 +176,6 @@ pre { width: 94vw; max-width:980px; margin:12px auto 0; background:#efefef; padd
     });
 
     window.addEventListener('resize', refresh3pt);
-  </script></body>
+  </script>
+</body>
 </html>
