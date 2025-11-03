@@ -1,20 +1,193 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Motion Play - Interactive Animation</title>
-  <link rel="stylesheet" href="styles.css">
+  <title>Basketball Court — Draggable Tokens</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #fafafa;
+    }
+    h1 {
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+    }
+    .court-container {
+      position: relative;
+      width: 90%;
+      max-width: 900px;
+      margin: 20px auto;
+      background: #f6e7bf;
+      border: 5px solid #b57b2a;
+      border-radius: 10px;
+      aspect-ratio: 94 / 50;
+      overflow: hidden;
+      touch-action: none;
+    }
+    svg {
+      width: 100%;
+      height: 100%;
+    }
+    .token {
+      position: absolute;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      cursor: grab;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    .controls {
+      text-align: center;
+      margin-top: 10px;
+    }
+    button {
+      margin: 0 5px;
+      padding: 8px 14px;
+      border: 1px solid #aaa;
+      border-radius: 6px;
+      background: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #f0f0f0;
+    }
+    pre {
+      width: 90%;
+      margin: 10px auto;
+      background: #eee;
+      padding: 10px;
+      border-radius: 8px;
+      overflow: auto;
+      font-size: 12px;
+    }
+  </style>
 </head>
 <body>
-  <h1>Motion Play - Interactive Animation</h1>
-  <p>Step-by-step animation of the "Motion" basketball play</p>
-  <canvas id="court" width="600" height="400"></canvas>
-  <div id="controls">
-    <button onclick="prevStep()">Previous</button>
-    <button onclick="nextStep()">Next</button>
+  <h1>Basketball Court — Draggable Tokens</h1>
+  <div class="controls">
+    <button id="toggle">Toggle Court (Full → Half)</button>
+    <button id="reset">Reset</button>
+    <button id="copy">Copy Positions</button>
   </div>
-  <p id="stepDesc"></p>
-  <script src="script.js"></script>
+  <div class="court-container" id="court">
+    <svg id="courtSVG" viewBox="0 0 940 500" preserveAspectRatio="xMidYMid meet">
+      <rect x="0" y="0" width="940" height="500" rx="10" fill="#f6e7bf" stroke="#b57b2a" stroke-width="6" />
+      <line x1="470" y1="0" x2="470" y2="500" stroke="#b57b2a" stroke-width="4" />
+      <circle cx="470" cy="250" r="60" fill="none" stroke="#b57b2a" stroke-width="4" />
+      <g transform="translate(70,110)">
+        <rect x="0" y="0" width="140" height="280" fill="none" stroke="#b57b2a" stroke-width="4" />
+        <circle cx="70" cy="140" r="40" fill="none" stroke="#b57b2a" stroke-width="4" stroke-dasharray="6 6" />
+        <circle cx="-10" cy="140" r="6" fill="#b57b2a" />
+      </g>
+      <g transform="translate(710,110)">
+        <rect x="0" y="0" width="140" height="280" fill="none" stroke="#b57b2a" stroke-width="4" />
+        <circle cx="70" cy="140" r="40" fill="none" stroke="#b57b2a" stroke-width="4" stroke-dasharray="6 6" />
+        <circle cx="150" cy="140" r="6" fill="#b57b2a" />
+      </g>
+    </svg>
+  </div>
+  <pre id="positions"></pre>
+
+  <script>
+    const court = document.getElementById('court');
+    const positionsDisplay = document.getElementById('positions');
+    let mode = 'full';
+
+    let players = [
+      { id: 1, label: '1', color: '#ef4444', x: 10, y: 20 },
+      { id: 2, label: '2', color: '#f59e0b', x: 30, y: 20 },
+      { id: 3, label: '3', color: '#10b981', x: 50, y: 20 },
+      { id: 4, label: '4', color: '#3b82f6', x: 40, y: 50 },
+      { id: 5, label: '5', color: '#8b5cf6', x: 60, y: 50 }
+    ];
+
+    const createTokens = () => {
+      court.querySelectorAll('.token').forEach(t => t.remove());
+      players.forEach(p => {
+        const div = document.createElement('div');
+        div.className = 'token';
+        div.textContent = p.label;
+        div.style.background = p.color;
+        div.style.left = `calc(${p.x}% - 18px)`;
+        div.style.top = `calc(${p.y}% - 18px)`;
+        div.dataset.id = p.id;
+        court.appendChild(div);
+      });
+      updatePositions();
+    };
+
+    function updatePositions() {
+      positionsDisplay.textContent = JSON.stringify(players, null, 2);
+    }
+
+    let dragging = null;
+
+    court.addEventListener('pointerdown', e => {
+      if (!e.target.classList.contains('token')) return;
+      const id = parseInt(e.target.dataset.id);
+      dragging = id;
+      e.target.setPointerCapture(e.pointerId);
+    });
+
+    court.addEventListener('pointermove', e => {
+      if (!dragging) return;
+      const rect = court.getBoundingClientRect();
+      let x = ((e.clientX - rect.left) / rect.width) * 100;
+      let y = ((e.clientY - rect.top) / rect.height) * 100;
+      x = Math.max(0, Math.min(100, x));
+      y = Math.max(0, Math.min(100, y));
+      players = players.map(p => p.id === dragging ? { ...p, x, y } : p);
+      createTokens();
+    });
+
+    court.addEventListener('pointerup', e => {
+      dragging = null;
+    });
+
+    document.getElementById('toggle').addEventListener('click', () => {
+      const svg = document.getElementById('courtSVG');
+      if (mode === 'full') {
+        svg.setAttribute('viewBox', '0 0 470 500');
+        svg.querySelector('line').style.display = 'none';
+        svg.querySelector('circle').style.display = 'none';
+        document.getElementById('toggle').innerText = 'Toggle Court (Half → Full)';
+        mode = 'half';
+      } else {
+        svg.setAttribute('viewBox', '0 0 940 500');
+        svg.querySelector('line').style.display = '';
+        svg.querySelector('circle').style.display = '';
+        document.getElementById('toggle').innerText = 'Toggle Court (Full → Half)';
+        mode = 'full';
+      }
+    });
+
+    document.getElementById('reset').addEventListener('click', () => {
+      players = [
+        { id: 1, label: '1', color: '#ef4444', x: 10, y: 20 },
+        { id: 2, label: '2', color: '#f59e0b', x: 30, y: 20 },
+        { id: 3, label: '#10b981', x: 50, y: 20 },
+        { id: 4, label: '4', color: '#3b82f6', x: 40, y: 50 },
+        { id: 5, label: '5', color: '#8b5cf6', x: 60, y: 50 }
+      ];
+      createTokens();
+    });
+
+    document.getElementById('copy').addEventListener('click', () => {
+      navigator.clipboard.writeText(JSON.stringify(players, null, 2));
+      alert('Positions copied to clipboard!');
+    });
+
+    createTokens();
+  </script>
 </body>
 </html>
