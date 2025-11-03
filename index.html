@@ -1,177 +1,451 @@
-<!-- index.html — NBA-accurate full and half court with draggable tokens and basketball emoji --><!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>NBA Court — Full & Half Court with Draggable Tokens and Ball</title>
   <style>
-    :root { --court-fill: #f6e7bf; --line: #1f1f1f; }
-    body { font-family: Inter, Arial, sans-serif; margin: 0; padding: 18px; background:#fafafa; }
-    h1 { text-align:center; font-size:20px; margin:0 0 12px; }
-    .controls { text-align:center; margin-bottom:12px; }
-    button { margin:0 6px; padding:8px 12px; border-radius:8px; border:1px solid #bbb; background:#fff; cursor:pointer; }
-    .court-container { width: 94vw; max-width:980px; margin: 0 auto; border-radius:10px; border:6px solid #b57b2a; background: var(--court-fill); overflow:hidden; touch-action:none; }
-    .court-inner { width:100%; height:0; padding-bottom:53.19%; position:relative; }
-    svg { position:absolute; inset:0; width:100%; height:100%; display:block; }.token { position:absolute; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; box-shadow:0 6px 18px rgba(0,0,0,0.18); cursor:grab; user-select:none; }
-.ball { width:24px; height:24px; font-size:20px; background:none; box-shadow:none; }
-pre { width: 94vw; max-width:980px; margin:12px auto 0; background:#efefef; padding:10px; border-radius:8px; font-size:12px; }
+    /* CSS Variables for theme */
+    :root { 
+      --court-fill: #f6e7bf; 
+      --line: #1f1f1f; 
+      --border-color: #b57b2a;
+    }
 
+    /* Base Styling and Typography */
+    body { 
+      font-family: 'Inter', Arial, sans-serif; 
+      margin: 0; 
+      padding: 18px; 
+      background: #fafafa;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h1 { 
+      text-align: center; 
+      font-size: clamp(18px, 4vw, 24px); 
+      margin: 0 0 12px;
+      color: #333;
+    }
+
+    /* Controls */
+    .controls { 
+      text-align: center; 
+      margin-bottom: 20px; 
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+    }
+    button { 
+      padding: 10px 16px; 
+      border-radius: 8px; 
+      border: 1px solid #bbb; 
+      background: #fff; 
+      cursor: pointer;
+      font-weight: 500;
+      transition: background-color 0.2s, box-shadow 0.2s, transform 0.1s;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      touch-action: manipulation;
+    }
+    button:hover {
+      background: #f0f0f0;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    button:active {
+      transform: scale(0.98);
+    }
+
+    /* Court Container */
+    .court-container { 
+      width: 100%; 
+      max-width: 980px; 
+      margin: 0 auto; 
+      border-radius: 12px; 
+      border: 6px solid var(--border-color); 
+      background: var(--court-fill); 
+      overflow: hidden; 
+      touch-action: none; 
+      box-shadow: 0 15px 35px rgba(181, 123, 42, 0.5); /* Enhanced shadow */
+    }
+    .court-inner { 
+      width: 100%; 
+      height: 0; 
+      padding-bottom: 53.19%; /* Aspect ratio for 94x50 court (50/94 * 100) */
+      position: relative; 
+    }
+    svg { 
+      position: absolute; 
+      inset: 0; 
+      width: 100%; 
+      height: 100%; 
+      display: block; 
+    }
+    
+    /* Tokens (Players & Ball) */
+    .token { 
+      position: absolute; 
+      width: 36px; 
+      height: 36px; 
+      border-radius: 50%; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      color: #fff; 
+      font-weight: 700; 
+      font-size: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3); 
+      cursor: grab; 
+      user-select: none;
+      transition: box-shadow 0.1s;
+    }
+    .token:active {
+        cursor: grabbing;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.4);
+    }
+    .ball { 
+      width: 28px; /* Slightly bigger ball */
+      height: 28px; 
+      font-size: 24px; 
+      background: none; 
+      box-shadow: none; 
+    }
+
+    /* Custom Toast Notification (Replaces alert()) */
+    #toast-notification {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #1f1f1f;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s, visibility 0.3s;
+      z-index: 1000;
+      font-size: 14px;
+      text-align: center;
+      min-width: 250px;
+    }
+    #toast-notification.show {
+      opacity: 1;
+      visibility: visible;
+    }
   </style>
 </head>
 <body>
-  <h1>Basketball Playbook</h1>
+  <!-- Toast notification element -->
+  <div id="toast-notification"></div>
+
+  <h1>NBA Court (94'×50') — Strategy Planner</h1>
   <div class="controls">
     <button id="toggle">Toggle: Full Court → Half Court</button>
     <button id="reset">Reset Positions</button>
     <button id="copy">Copy Positions</button>
-  </div>  <div class="court-container" id="court">
+  </div>
+  
+  <div class="court-container" id="court">
     <div class="court-inner" id="courtInner">
+      <!-- SVG Court Rendering -->
       <svg id="courtSVG" viewBox="0 0 940 500" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <!-- Main Court Surface -->
         <rect x="0" y="0" width="940" height="500" fill="var(--court-fill)" />
+        <!-- Court Boundary (Inner line) -->
         <rect x="6" y="6" width="928" height="488" rx="6" fill="none" stroke="#b57b2a" stroke-width="6" />
-        <line id="midLine" x1="470" y1="0" x2="470" y2="500" stroke="var(--line)" stroke-width="6" />
-        <circle id="midCircle" cx="470" cy="250" r="60" fill="none" stroke="var(--line)" stroke-width="5" /><g id="leftEnd">
-      <rect x="0" y="170" width="190" height="160" fill="none" stroke="var(--line)" stroke-width="5" />
-      <circle cx="190" cy="250" r="60" fill="none" stroke="var(--line)" stroke-width="5" stroke-dasharray="6 6" />
-      <circle cx="40" cy="250" r="6" fill="var(--line)" />
-      <line x1="44" y1="235" x2="44" y2="265" stroke="var(--line)" stroke-width="6" />
-      <path id="left3pt" fill="none" stroke="var(--line)" stroke-width="5" />
-    </g>
+        
+        <!-- Center Line and Circle -->
+        <line id="midLine" x1="470" y1="0" x2="470" y2="500" stroke="var(--line)" stroke-width="5" />
+        <circle id="midCircle" cx="470" cy="250" r="60" fill="none" stroke="var(--line)" stroke-width="5" />
+        
+        <!-- Left End (Baseline) -->
+        <g id="leftEnd">
+          <!-- Free Throw Lane (The Key) -->
+          <rect x="0" y="170" width="190" height="160" fill="none" stroke="var(--line)" stroke-width="5" />
+          <!-- Free Throw Circle (Top of Key) -->
+          <circle cx="190" cy="250" r="60" fill="none" stroke="var(--line)" stroke-width="5" stroke-dasharray="0" />
+          <!-- Restricted Area Arc (4ft from rim) -->
+          <path d="M 40 230 A 20 20 0 0 1 40 270" fill="none" stroke="var(--line)" stroke-width="5" />
+          <!-- Basket/Rim (4ft from baseline) -->
+          <circle cx="50" cy="250" r="6" fill="var(--line)" />
+          <!-- Backboard (2ft from baseline) -->
+          <line x1="44" y1="235" x2="44" y2="265" stroke="var(--line)" stroke-width="6" />
+          <!-- 3-Point Line Path (Generated by JS) -->
+          <path id="left3pt" fill="none" stroke="var(--line)" stroke-width="5" />
+        </g>
 
-    <g id="rightEnd">
-      <rect x="750" y="170" width="190" height="160" fill="none" stroke="var(--line)" stroke-width="5" />
-      <circle cx="750" cy="250" r="60" fill="none" stroke="var(--line)" stroke-width="5" stroke-dasharray="6 6" />
-      <circle cx="900" cy="250" r="6" fill="var(--line)" />
-      <line x1="896" y1="235" x2="896" y2="265" stroke="var(--line)" stroke-width="6" />
-      <path id="right3pt" fill="none" stroke="var(--line)" stroke-width="5" />
-    </g>
-  </svg>
-</div>
-
-  </div>  
-  <pre id="positions"></pre>  <script>
+        <!-- Right End (Baseline) -->
+        <g id="rightEnd">
+          <!-- Free Throw Lane (The Key) -->
+          <rect x="750" y="170" width="190" height="160" fill="none" stroke="var(--line)" stroke-width="5" />
+          <!-- Free Throw Circle (Top of Key) -->
+          <circle cx="750" cy="250" r="60" fill="none" stroke="var(--line)" stroke-width="5" stroke-dasharray="0" />
+          <!-- Restricted Area Arc (4ft from rim) -->
+          <path d="M 900 230 A 20 20 0 0 0 900 270" fill="none" stroke="var(--line)" stroke-width="5" />
+          <!-- Basket/Rim (4ft from baseline) -->
+          <circle cx="890" cy="250" r="6" fill="var(--line)" />
+          <!-- Backboard (2ft from baseline) -->
+          <line x1="896" y1="235" x2="896" y2="265" stroke="var(--line)" stroke-width="6" />
+          <!-- 3-Point Line Path (Generated by JS) -->
+          <path id="right3pt" fill="none" stroke="var(--line)" stroke-width="5" />
+        </g>
+      </svg>
+    </div>
+  </div>
+  
+  <script>
+    // --- Constant Definitions ---
     const SCALE = 10;
     const COURT_LENGTH_FT = 94;
     const COURT_WIDTH_FT = 50;
     const RIM_FROM_BASELINE_FT = 4;
     const THREE_PT_RADIUS_FT = 23.75;
+    const THREE_POINT_SIDE_FT = 22; // Distance from baseline to where 3pt line becomes an arc
 
-    function describe3ptArc(cx, cy, radiusFt) {
-      const r = radiusFt * SCALE;
-      const start = -80 * Math.PI / 180;
-      const end = 80 * Math.PI / 180;
-      const startX = cx + r * Math.cos(start);
-      const startY = cy + r * Math.sin(start);
-      const endX = cx + r * Math.cos(end);
-      const endY = cy + r * Math.sin(end);
-      return `M ${startX} ${startY} A ${r} ${r} 0 0 1 ${endX} ${endY}`;
-    }
-
-    function refresh3pt() {
-      const leftCx = RIM_FROM_BASELINE_FT * SCALE;
-      const rightCx = (COURT_LENGTH_FT - RIM_FROM_BASELINE_FT) * SCALE;
-      const cy = (COURT_WIDTH_FT / 2) * SCALE;
-      document.getElementById('left3pt').setAttribute('d', describe3ptArc(leftCx, cy, THREE_PT_RADIUS_FT));
-      document.getElementById('right3pt').setAttribute('d', describe3ptArc(rightCx, cy, THREE_PT_RADIUS_FT));
-    }
-
-    refresh3pt();
+    // --- State and Constants ---
+    let isFullCourt = true; // State to track the court mode.
 
     const courtInner = document.getElementById('courtInner');
-    const positionsDisplay = document.getElementById('positions');
+    const playerBaseSize = 36;
+    const ballBaseSize = 28;
 
-    let players = [
-      { id: 1, label: '1', color: '#ef4444', x: 12, y: 20 },
-      { id: 2, label: '2', color: '#f59e0b', x: 30, y: 20 },
-      { id: 3, label: '3', color: '#10b981', x: 50, y: 20 },
-      { id: 4, label: '4', color: '#3b82f6', x: 40, y: 50 },
-      { id: 5, label: '5', color: '#8b5cf6', x: 60, y: 50 },
-      { id: 6, label: '🏀', color: 'none', x: 50, y: 40, isBall: true }
+    // High block is 19 feet from the baseline. 
+    // 19ft / 47ft (half court) * 100 = ~40.42% of the half-court display area.
+    const HIGH_BLOCK_DISPLAY_X = 40.42;
+
+    // Reset positions, ALWAYS stored as 0-100% of the full 94-foot court.
+    const FULL_COURT_RESET_POSITIONS = [
+        { id: 1, label: '1', color: '#ef4444', x: 35, y: 50, isBall: false }, 
+        { id: 2, label: '2', color: '#f59e0b', x: 30, y: 15, isBall: false }, 
+        { id: 3, label: '3', color: '#10b981', x: 30, y: 85, isBall: false }, 
+        // Player 4 & 5 stored at 7.5% (low block)
+        { id: 4, label: '4', color: '#3b82f6', x: 7.5, y: 35, isBall: false }, 
+        { id: 5, label: '5', color: '#8b5cf6', x: 7.5, y: 65, isBall: false }, 
+        { id: 6, label: '🏀', color: 'none', x: 37, y: 47, isBall: true }     
     ];
 
+    // Initialize players with full court percentages
+    let players = FULL_COURT_RESET_POSITIONS.map(p => ({ ...p }));
+
+    // --- Utility Functions ---
+
+    /**
+     * Draws the 3-point lines based on NBA specifications.
+     */
+    function refresh3pt() {
+      // Rim positions in SVG coordinates
+      const leftRimX = RIM_FROM_BASELINE_FT * SCALE;
+      const rightRimX = (COURT_LENGTH_FT - RIM_FROM_BASELINE_FT) * SCALE;
+      const cy = (COURT_WIDTH_FT / 2) * SCALE;
+
+      // Path: The NBA 3-point line has two straight lines parallel to the sidelines
+      // that meet the arc 22ft from the baseline.
+      const sideLineLength = 22 * SCALE;
+      const r = THREE_PT_RADIUS_FT * SCALE;
+      const halfW = (COURT_WIDTH_FT * SCALE) / 2;
+
+      // Left 3pt line
+      const leftX_ArcStart = leftRimX + Math.sqrt(r * r - sideLineLength * sideLineLength);
+      const leftY_StraightEnd = halfW - sideLineLength;
+      document.getElementById('left3pt').setAttribute('d', 
+        `M 0 ${leftY_StraightEnd} L ${leftX_ArcStart} ${leftY_StraightEnd} A ${r} ${r} 0 0 1 ${leftX_ArcStart} ${halfW + sideLineLength} L 0 ${halfW + sideLineLength}`
+      );
+      
+      // Right 3pt line
+      const rightX_ArcStart = rightRimX - Math.sqrt(r * r - sideLineLength * sideLineLength);
+      const rightY_StraightEnd = halfW - sideLineLength;
+      document.getElementById('right3pt').setAttribute('d', 
+        `M 940 ${rightY_StraightEnd} L ${rightX_ArcStart} ${rightY_StraightEnd} A ${r} ${r} 0 0 0 ${rightX_ArcStart} ${halfW + sideLineLength} L 940 ${halfW + sideLineLength}`
+      );
+    }
+
+    /**
+     * Updates the CSS positions of the tokens based on the current 'players' array and 'isFullCourt' state.
+     */
+    function updateTokenPositions() {
+        players.forEach(p => {
+            const el = courtInner.querySelector(`.token[data-id='${p.id}']`);
+            if (el) {
+                const size = p.isBall ? ballBaseSize : playerBaseSize;
+                const halfSize = size / 2;
+                
+                let displayX;
+
+                if (isFullCourt) {
+                    // Full court: use stored full court percentage (0-100)
+                    displayX = p.x;
+                } else {
+                    // Half court: scale full court percentage by 2
+                    
+                    // SPECIAL OVERRIDE for players 4 and 5: Force them to the visual High Block position 
+                    if (p.id === 4 || p.id === 5) {
+                        displayX = HIGH_BLOCK_DISPLAY_X;
+                    } else {
+                        // Normal scaling for other players (x * 2)
+                        displayX = p.x * 2; 
+                    }
+                }
+                
+                el.style.left = `calc(${displayX}% - ${halfSize}px)`;
+                el.style.top = `calc(${p.y}% - ${halfSize}px)`; // Y is always constant scale
+            }
+        });
+    }
+
+    /**
+     * Renders the player tokens onto the court.
+     */
     function createTokens() {
       courtInner.querySelectorAll('.token').forEach(t => t.remove());
       players.forEach(p => {
         const d = document.createElement('div');
         d.className = 'token' + (p.isBall ? ' ball' : '');
         d.textContent = p.label;
-        if (!p.isBall) d.style.background = p.color;
-        d.style.left = `calc(${p.x}% - ${(p.isBall ? 12 : 18)}px)`;
-        d.style.top = `calc(${p.y}% - ${(p.isBall ? 12 : 18)}px)`;
         d.dataset.id = p.id;
+        if (!p.isBall) d.style.background = p.color;
         courtInner.appendChild(d);
       });
-      positionsDisplay.textContent = JSON.stringify(players, null, 2);
+      // Set initial positions
+      updateTokenPositions();
     }
 
+    // Initialize court lines and tokens
+    refresh3pt();
     createTokens();
 
     let draggingId = null;
     let dragOffset = { x:0, y:0 };
 
+    // --- Drag/Touch Handlers ---
+
     courtInner.addEventListener('pointerdown', (ev) => {
       const t = ev.target.closest('.token');
       if (!t) return;
+      
+      // Prevent scrolling while dragging on touch devices
+      ev.preventDefault();
+
       draggingId = Number(t.dataset.id);
       const rect = t.getBoundingClientRect();
-      dragOffset.x = ev.clientX - (rect.left + rect.width/2);
-      dragOffset.y = ev.clientY - (rect.top + rect.height/2);
+      
+      // Calculate offset from click/touch point to the center of the token
+      const tokenWidth = t.classList.contains('ball') ? ballBaseSize : playerBaseSize;
+      dragOffset.x = ev.clientX - (rect.left + tokenWidth/2);
+      dragOffset.y = ev.clientY - (rect.top + tokenWidth/2);
+      
       t.setPointerCapture(ev.pointerId);
     });
 
     window.addEventListener('pointermove', (ev) => {
       if (!draggingId) return;
-      const rect = courtInner.getBoundingClientRect();
+      
+      const courtRect = courtInner.getBoundingClientRect();
+      const token = players.find(p => p.id === draggingId);
+      const size = token.isBall ? ballBaseSize : playerBaseSize;
+      const halfSize = size / 2;
+
+      // Adjust cursor position by the drag offset
       const adjX = ev.clientX - dragOffset.x;
       const adjY = ev.clientY - dragOffset.y;
-      let px = ((adjX - rect.left) / rect.width) * 100;
-      let py = ((adjY - rect.top) / rect.height) * 100;
-      px = Math.max(0, Math.min(100, px));
+      
+      // Calculate new position as a percentage of HTML container width/height
+      let displayPx = ((adjX - courtRect.left) / courtRect.width) * 100;
+      let py = ((adjY - courtRect.top) / courtRect.height) * 100;
+      
+      // Clamp position to the visible area (0% to 100% of the display)
+      displayPx = Math.max(0, Math.min(100, displayPx));
       py = Math.max(0, Math.min(100, py));
-      players = players.map(p => p.id === draggingId ? { ...p, x: px, y: py } : p);
-      const el = courtInner.querySelector(`.token[data-id='${draggingId}']`);
-      if (el) {
-        el.style.left = `calc(${px}% - ${(players.find(p=>p.id===draggingId).isBall ? 12 : 18)}px)`;
-        el.style.top = `calc(${py}% - ${(players.find(p=>p.id===draggingId).isBall ? 12 : 18)}px)`;
+      
+      // Convert displayPx back to the full court percentage (p.x) for storage
+      let fullCourtPx;
+      if (isFullCourt) {
+          fullCourtPx = displayPx;
+      } else {
+          // If in half court, the full court percentage is half of the displayed percentage
+          fullCourtPx = displayPx / 2;
       }
-      positionsDisplay.textContent = JSON.stringify(players, null, 2);
+
+      // Clamp the fullCourtPx to 100% of the full court width.
+      fullCourtPx = Math.max(0, Math.min(100, fullCourtPx));
+
+      // Update player data with the full court percentage
+      players = players.map(p => p.id === draggingId ? { ...p, x: fullCourtPx, y: py } : p);
+      
+      // Update DOM position
+      updateTokenPositions();
     });
 
     window.addEventListener('pointerup', () => draggingId = null);
+    
+    // --- UI Logic (Toggles, Reset, Copy) ---
+
+    /**
+     * Custom toast notification function (replaces alert()).
+     */
+    function showToast(message, duration = 3000) {
+        const toast = document.getElementById('toast-notification');
+        toast.textContent = message;
+        toast.classList.add('show');
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, duration);
+    }
 
     document.getElementById('toggle').addEventListener('click', () => {
       const btn = document.getElementById('toggle');
       const svg = document.getElementById('courtSVG');
-      if (svg.getAttribute('viewBox') === '0 0 940 500') {
-        svg.setAttribute('viewBox','0 0 470 500');
+      
+      if (isFullCourt) {
+        // Full Court -> Half Court
+        svg.setAttribute('viewBox','0 0 470 500'); // Crop to left half
         document.getElementById('midLine').style.display = 'none';
         document.getElementById('midCircle').style.display = 'none';
+        document.getElementById('rightEnd').style.display = 'none'; 
         btn.textContent = 'Toggle: Half Court → Full Court';
+        isFullCourt = false;
       } else {
-        svg.setAttribute('viewBox','0 0 940 500');
+        // Half Court -> Full Court
+        svg.setAttribute('viewBox','0 0 940 500'); // Full view
         document.getElementById('midLine').style.display = '';
         document.getElementById('midCircle').style.display = '';
+        document.getElementById('rightEnd').style.display = ''; 
         btn.textContent = 'Toggle: Full Court → Half Court';
+        isFullCourt = true;
       }
+      
+      // Re-render positions based on new scale factor
+      updateTokenPositions();
     });
 
     document.getElementById('reset').addEventListener('click', () => {
-      players = /*[
-        { id: 1, label: '1', color: '#ef4444', x: 12, y: 20 },
-        { id: 2, label: '2', color: '#f59e0b', x: 30, y: 20 },
-        { id: 3, label: '3', color: '#10b981', x: 50, y: 20 },
-        { id: 4, label: '4', color: '#3b82f6', x: 40, y: 50 },
-        { id: 5, label: '5', color: '#8b5cf6', x: 60, y: 50 },
-        { id: 6, label: '🏀', color: 'none', x: 50, y: 40, isBall: true }
-      ]*/;
-      createTokens();
+      // Deep copy the reset positions (which are always full court percentages)
+      players = FULL_COURT_RESET_POSITIONS.map(p => ({ ...p }));
+      
+      // Recreates tokens and calls updateTokenPositions for correct scaling
+      createTokens(); 
+      showToast('Positions reset. 4 & 5 start low post (full court) but display high post (half court).');
     });
 
     document.getElementById('copy').addEventListener('click', async () => {
+      // Always export full court percentages (p.x)
+      const dataToCopy = JSON.stringify(players.map(p => ({
+        id: p.id, 
+        label: p.label, 
+        x: p.x.toFixed(2), 
+        y: p.y.toFixed(2), 
+        isBall: p.isBall || undefined 
+      })), null, 2);
+
       try {
-        await navigator.clipboard.writeText(JSON.stringify(players, null, 2));
-        alert('Positions copied to clipboard');
-      } catch {
-        alert('Copy failed. Positions:\n' + JSON.stringify(players, null, 2));
+        await navigator.clipboard.writeText(dataToCopy);
+        showToast('✅ Positions copied to clipboard!');
+      } catch (err) {
+        console.error('Copy failed (using fallback method):', err);
+        // Fallback: Show the user the data in the toast
+        showToast('❌ Copy failed. Check console for positions.', 5000);
       }
     });
 
@@ -179,3 +453,4 @@ pre { width: 94vw; max-width:980px; margin:12px auto 0; background:#efefef; padd
   </script>
 </body>
 </html>
+
