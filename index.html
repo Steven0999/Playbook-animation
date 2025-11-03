@@ -1,8 +1,8 @@
-<!-- index.html — NBA-accurate full and half court with draggable tokens --><!DOCTYPE html><html lang="en">
+<!-- index.html — NBA-accurate full and half court with draggable tokens and basketball emoji --><!DOCTYPE html><html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>NBA Court — Full & Half Court with Draggable Tokens</title>
+  <title>NBA Court — Full & Half Court with Draggable Tokens and Ball</title>
   <style>
     :root { --court-fill: #f6e7bf; --line: #1f1f1f; }
     body { font-family: Inter, Arial, sans-serif; margin: 0; padding: 18px; background:#fafafa; }
@@ -12,12 +12,13 @@
     .court-container { width: 94vw; max-width:980px; margin: 0 auto; border-radius:10px; border:6px solid #b57b2a; background: var(--court-fill); overflow:hidden; touch-action:none; }
     .court-inner { width:100%; height:0; padding-bottom:53.19%; position:relative; }
     svg { position:absolute; inset:0; width:100%; height:100%; display:block; }.token { position:absolute; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; box-shadow:0 6px 18px rgba(0,0,0,0.18); cursor:grab; user-select:none; }
+.ball { width:24px; height:24px; font-size:20px; background:none; box-shadow:none; }
 pre { width: 94vw; max-width:980px; margin:12px auto 0; background:#efefef; padding:10px; border-radius:8px; font-size:12px; }
 
   </style>
 </head>
 <body>
-  <h1>NBA Court (94'×50') — Full & Half Court with Draggable Tokens</h1>
+  <h1>NBA Court (94'×50') — Full & Half Court with Draggable Tokens and Ball</h1>
   <div class="controls">
     <button id="toggle">Toggle: Full Court → Half Court</button>
     <button id="reset">Reset Positions</button>
@@ -28,8 +29,7 @@ pre { width: 94vw; max-width:980px; margin:12px auto 0; background:#efefef; padd
         <rect x="0" y="0" width="940" height="500" fill="var(--court-fill)" />
         <rect x="6" y="6" width="928" height="488" rx="6" fill="none" stroke="#b57b2a" stroke-width="6" />
         <line id="midLine" x1="470" y1="0" x2="470" y2="500" stroke="var(--line)" stroke-width="6" />
-        <circle id="midCircle" cx="470" cy="250" r="60" fill="none" stroke="var(--line)" stroke-width="5" /><!-- Left half court -->
-    <g id="leftEnd">
+        <circle id="midCircle" cx="470" cy="250" r="60" fill="none" stroke="var(--line)" stroke-width="5" /><g id="leftEnd">
       <rect x="0" y="170" width="190" height="160" fill="none" stroke="var(--line)" stroke-width="5" />
       <circle cx="190" cy="250" r="60" fill="none" stroke="var(--line)" stroke-width="5" stroke-dasharray="6 6" />
       <circle cx="40" cy="250" r="6" fill="var(--line)" />
@@ -37,7 +37,6 @@ pre { width: 94vw; max-width:980px; margin:12px auto 0; background:#efefef; padd
       <path id="left3pt" fill="none" stroke="var(--line)" stroke-width="5" />
     </g>
 
-    <!-- Right half court -->
     <g id="rightEnd">
       <rect x="750" y="170" width="190" height="160" fill="none" stroke="var(--line)" stroke-width="5" />
       <circle cx="750" cy="250" r="60" fill="none" stroke="var(--line)" stroke-width="5" stroke-dasharray="6 6" />
@@ -84,18 +83,19 @@ pre { width: 94vw; max-width:980px; margin:12px auto 0; background:#efefef; padd
       { id: 2, label: '2', color: '#f59e0b', x: 30, y: 20 },
       { id: 3, label: '3', color: '#10b981', x: 50, y: 20 },
       { id: 4, label: '4', color: '#3b82f6', x: 40, y: 50 },
-      { id: 5, label: '5', color: '#8b5cf6', x: 60, y: 50 }
+      { id: 5, label: '5', color: '#8b5cf6', x: 60, y: 50 },
+      { id: 6, label: '🏀', color: 'none', x: 50, y: 40, isBall: true }
     ];
 
     function createTokens() {
       courtInner.querySelectorAll('.token').forEach(t => t.remove());
       players.forEach(p => {
         const d = document.createElement('div');
-        d.className = 'token';
+        d.className = 'token' + (p.isBall ? ' ball' : '');
         d.textContent = p.label;
-        d.style.background = p.color;
-        d.style.left = `calc(${p.x}% - 18px)`;
-        d.style.top = `calc(${p.y}% - 18px)`;
+        if (!p.isBall) d.style.background = p.color;
+        d.style.left = `calc(${p.x}% - ${(p.isBall ? 12 : 18)}px)`;
+        d.style.top = `calc(${p.y}% - ${(p.isBall ? 12 : 18)}px)`;
         d.dataset.id = p.id;
         courtInner.appendChild(d);
       });
@@ -128,7 +128,10 @@ pre { width: 94vw; max-width:980px; margin:12px auto 0; background:#efefef; padd
       py = Math.max(0, Math.min(100, py));
       players = players.map(p => p.id === draggingId ? { ...p, x: px, y: py } : p);
       const el = courtInner.querySelector(`.token[data-id='${draggingId}']`);
-      if (el) { el.style.left = `calc(${px}% - 18px)`; el.style.top = `calc(${py}% - 18px)`; }
+      if (el) {
+        el.style.left = `calc(${px}% - ${(players.find(p=>p.id===draggingId).isBall ? 12 : 18)}px)`;
+        el.style.top = `calc(${py}% - ${(players.find(p=>p.id===draggingId).isBall ? 12 : 18)}px)`;
+      }
       positionsDisplay.textContent = JSON.stringify(players, null, 2);
     });
 
@@ -156,7 +159,8 @@ pre { width: 94vw; max-width:980px; margin:12px auto 0; background:#efefef; padd
         { id: 2, label: '2', color: '#f59e0b', x: 30, y: 20 },
         { id: 3, label: '3', color: '#10b981', x: 50, y: 20 },
         { id: 4, label: '4', color: '#3b82f6', x: 40, y: 50 },
-        { id: 5, label: '5', color: '#8b5cf6', x: 60, y: 50 }
+        { id: 5, label: '5', color: '#8b5cf6', x: 60, y: 50 },
+        { id: 6, label: '🏀', color: 'none', x: 50, y: 40, isBall: true }
       ];
       createTokens();
     });
